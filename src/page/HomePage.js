@@ -1,7 +1,8 @@
-import PageLayout from "./PageLayout";
 import SearchForm from "../component/SearchForm";
 import ProductList from "../component/ProductList";
 import { getProducts, getCategories } from "../api/productApi";
+import { addToCart } from "../module/cartModule";
+import Toast from "../component/Toast";
 
 class State {
   constructor(initState) {
@@ -16,7 +17,7 @@ class State {
   }
 }
 
-const HomePage = async (render) => {
+const HomePage = async (render, { toast }) => {
   const isLoading = new State(true);
   const products = new State([]);
 
@@ -32,16 +33,13 @@ const HomePage = async (render) => {
   const search = new State("");
 
   function pageRender() {
-    render(
-      PageLayout({
-        children: () => /*HTML*/ `
+    render(/*HTML*/ `
          <!-- 검색 및 필터 -->
         ${SearchForm({ isLoading: isCategoryLoading.get(), limit: limit.get(), sort: sort.get(), search: search.get(), categories: categories.get(), category1: category1.get(), category2: category2.get() })}
          <!-- 상품 목록 -->
         ${ProductList({ isLoading: isLoading.get(), products: products.get() })}
-       `,
-      }),
-    );
+        ${toast.get().show ? Toast({ type: toast.get().type, message: toast.get().message }) : ""}
+       `);
   }
 
   pageRender();
@@ -98,7 +96,8 @@ const HomePage = async (render) => {
     }
   });
 
-  document.addEventListener("click", (e) => {
+  addEventListener("click", (e) => {
+    // 카테고리 선택
     if (e.target.dataset.category1) {
       const value = e.target.dataset.category1;
       category1.set(value, pageRender);
@@ -111,6 +110,7 @@ const HomePage = async (render) => {
       getProductsData();
     }
 
+    // 브레드크럼 선택
     if (e.target.dataset) {
       switch (e.target.dataset.breadcrumb) {
         case "reset":
@@ -123,6 +123,19 @@ const HomePage = async (render) => {
           getProductsData();
           break;
       }
+    }
+
+    // 장바구니 담기
+    if (e.target.closest(".add-to-cart-btn")) {
+      const productId = e.target.dataset.productId;
+      const product = products.get().find((product) => product.productId === productId);
+      const isAdded = addToCart(product);
+      isAdded && toast.set({ message: "장바구니에 추가되었습니다", type: "success" }, pageRender);
+      pageRender();
+    }
+
+    if (e.target.closest("#toast-close-btn")) {
+      toast.close(pageRender);
     }
   });
 };
