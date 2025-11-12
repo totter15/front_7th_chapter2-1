@@ -2,9 +2,16 @@ import HomePage from "./page/HomePage";
 import toastStore from "./store/toastStore";
 import layout from "./page/PageLayout";
 
+const basePath = import.meta.env.BASE_URL;
+const pathName = window.location.pathname;
+const relativePath = pathName.replace(basePath, "/").replace(/\/$/, "") || "/";
+
 const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
     worker.start({
+      serviceWorker: {
+        url: `${basePath}mockServiceWorker.js`,
+      },
       onUnhandledRequest: "bypass",
     }),
   );
@@ -13,8 +20,11 @@ async function main() {
   const $root = document.querySelector("#root");
   const toast = toastStore();
 
-  const render = (HTML) => ($root.innerHTML = layout({ children: () => HTML }));
-  await HomePage(render, { toast });
+  if (relativePath === "/") {
+    // 상대경로로 바꿔줌
+    const render = (HTML) => ($root.innerHTML = layout({ children: () => HTML }));
+    await HomePage(render, { toast });
+  }
 }
 
 // const 상품목록_레이아웃_로딩완료 = /*html*/ `
