@@ -1,8 +1,15 @@
-export const addToCart = (cart) => {
+export const addToCart = (cart, quantity = 1) => {
   const currentCart = getCart();
-  if (currentCart.find((item) => item.productId === cart.productId)) return false;
-  localStorage.setItem("cart", JSON.stringify([...currentCart, cart]));
-  return true;
+  const index = currentCart.findIndex((item) => item.productId === cart.productId);
+  const newCart = [...currentCart];
+
+  if (index < 0) {
+    newCart.push({ ...cart, quantity });
+  } else {
+    newCart[index].quantity += quantity;
+  }
+
+  localStorage.setItem("cart", JSON.stringify(newCart));
 };
 
 export const getCart = () => {

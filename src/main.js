@@ -1,6 +1,7 @@
 import HomePage from "./page/HomePage";
 import toastStore from "./store/toastStore";
 import layout from "./page/PageLayout";
+import ProductPage from "./page/ProductPage";
 
 const basePath = import.meta.env.BASE_URL;
 const pathName = window.location.pathname;
@@ -20,10 +21,16 @@ async function main() {
   const $root = document.querySelector("#root");
   const toast = toastStore();
 
+  const render = (HTML) => ($root.innerHTML = layout({ children: () => HTML }));
+
   if (relativePath === "/") {
     // 상대경로로 바꿔줌
-    const render = (HTML) => ($root.innerHTML = layout({ children: () => HTML }));
     await HomePage(render, { toast });
+  }
+
+  if (relativePath.includes("/product")) {
+    // 상대경로로 바꿔줌
+    await ProductPage(render, { toast });
   }
 }
 
