@@ -47,8 +47,6 @@ async function main() {
   handleRoute();
 
   const showCartModal = () => {
-    // 이미 열려있으면 열지 않음
-    if (document.querySelector(".cart-modal")) return;
     $root.insertAdjacentHTML("beforeend", CartModal({ checkedCartItems: checkedCartItems.get() }));
   };
 
@@ -60,6 +58,34 @@ async function main() {
   const renderCartModal = () => {
     hideCartModal();
     showCartModal();
+    updateCartIcon();
+  };
+
+  const updateCartIcon = () => {
+    const cartIconBtn = document.querySelector("#cart-icon-btn");
+    if (!cartIconBtn) return;
+
+    const cart = getCart();
+    let cartIconSpan = cartIconBtn.querySelector("span");
+
+    if (cart.length > 0) {
+      if (cartIconSpan) {
+        // 기존 span 업데이트
+        cartIconSpan.textContent = cart.length;
+      } else {
+        // span이 없으면 새로 만들기
+        cartIconSpan = document.createElement("span");
+        cartIconSpan.className =
+          "absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center";
+        cartIconSpan.textContent = cart.length;
+        cartIconBtn.appendChild(cartIconSpan);
+      }
+    } else {
+      // 장바구니가 비어있으면 span 제거
+      if (cartIconSpan) {
+        cartIconSpan.remove();
+      }
+    }
   };
 
   addEventListener("keydown", (e) => {
@@ -71,7 +97,10 @@ async function main() {
   addEventListener("click", (e) => {
     // 카트 열기
     if (e.target.closest("#cart-icon-btn")) {
-      showCartModal();
+      // 이미 열려있지 않으면 열기
+      if (!document.querySelector(".cart-modal")) {
+        showCartModal();
+      }
     }
 
     // 카트 닫기 - X 버튼
@@ -103,7 +132,6 @@ async function main() {
       removeAllFromCart();
       checkedCartItems.set([]);
       showToast({ message: "장바구니가 비워졌습니다", type: "info" });
-      handleRoute();
       renderCartModal();
     }
 
@@ -114,7 +142,6 @@ async function main() {
       });
       checkedCartItems.set([]);
       showToast({ message: "선택한 상품들이 삭제되었습니다", type: "info" });
-      handleRoute();
       renderCartModal();
     }
 
@@ -124,7 +151,6 @@ async function main() {
       removeFromCart(btn.dataset.productId);
       checkedCartItems.set(checkedCartItems.get().filter((id) => id !== btn.dataset.productId));
       showToast({ message: "선택한 상품이 삭제되었습니다", type: "info" });
-      handleRoute();
       renderCartModal();
     }
 
