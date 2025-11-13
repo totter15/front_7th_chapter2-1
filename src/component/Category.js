@@ -9,7 +9,7 @@ const CategoryItem = ({ category, type, isSelect }) => {
 
 const Category = ({ isLoading, categories, category1, category2 }) => {
   const category1List = Object.keys(categories);
-  const category2List = category1 ? Object.keys(categories[category1]) : [];
+  const category2List = category1 ? Object.keys(categories[category1] || {}) : [];
 
   return /*HTML*/ `
   <div class="space-y-2">
@@ -18,11 +18,11 @@ const Category = ({ isLoading, categories, category1, category2 }) => {
     <button data-breadcrumb="reset" class="text-xs hover:text-blue-800 hover:underline">전체</button>
     ${
       category1
-        ? /*HTML*/ `<span class="text-xs text-gray-500">&gt;</span><button data-breadcrumb="category1" class="text-xs hover:text-blue-800 hover:underline">${category1}</button>
+        ? /*HTML*/ `<span class=" text-xs text-gray-500">&gt;</span><button data-breadcrumb=${category1} class="breadcrumb-btn1 text-xs hover:text-blue-800 hover:underline">${category1}</button>
     `
         : ""
     }
-    ${category2 ? /*HTML*/ `<span class="text-xs text-gray-500">&gt;</span><button data-breadcrumb="category2" class="text-xs hover:text-blue-800 hover:underline">${category2}</button>` : ""}
+    ${category2 ? /*HTML*/ `<span class=" text-xs text-gray-500">&gt;</span><button data-breadcrumb=${category2} class="breadcrumb-btn2 text-xs hover:text-blue-800 hover:underline">${category2}</button>` : ""}
   </div>
 
   ${
