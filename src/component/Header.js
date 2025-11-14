@@ -13,7 +13,7 @@ const Header = () => {
 ${
   !window.location.pathname.includes("/product")
     ? /*HTML*/ ` <h1 class="text-xl font-bold text-gray-900">
-          <a href="/" data-link="">쇼핑몰</a>
+          <a href="/front_7th_chapter2-1/" data-link="">쇼핑몰</a>
         </h1> `
     : /*HTML*/ `
           <div class="flex items-center space-x-3">
