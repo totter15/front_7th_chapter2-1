@@ -8,6 +8,8 @@ const toastModule = (root) => {
       clearTimeout(timer);
     }
 
+    // 기존 토스트 제거
+    document.querySelector(".toast")?.remove();
     root.insertAdjacentHTML("beforeend", Toast({ type, message }));
 
     const removeToast = () => {
