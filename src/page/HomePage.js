@@ -36,38 +36,35 @@ const HomePage = async (render, { showToast }) => {
     setupIntersectionObserver();
   }
 
-  document.addEventListener("change", (e) => {
+  document.addEventListener("change", async (e) => {
     // 상품수
     if (e.target.id === "limit-select") {
       const value = e.target.value;
-      page.set(1, pageRender);
+      page.set(1);
       setParams("limit", value);
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
 
     // 정렬
     if (e.target.id === "sort-select") {
       const value = e.target.value;
-      page.set(1, pageRender);
+      page.set(1);
       setParams("sort", value);
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
   });
 
   // 검색
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", async (e) => {
     if (e.target.id === "search-input" && e.key === "Enter") {
       const value = e.target.value;
-      page.set(1, pageRender);
+      page.set(1);
       value ? setParams("search", value) : deleteParams("search");
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
   });
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     // 장바구니 버튼 클릭이 아닌 경우에만 상세페이지로 이동
     if (e.target.closest(".product-card") && !e.target.closest(".add-to-cart-btn")) {
       const productId = e.target.closest(".product-card").dataset.productId;
@@ -79,37 +76,33 @@ const HomePage = async (render, { showToast }) => {
     // 카테고리 선택
     if (e.target.dataset.category1) {
       const value = e.target.dataset.category1;
-      page.set(1, pageRender);
+      page.set(1);
       deleteParams("category2");
       setParams("category1", value);
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
 
     if (e.target.dataset.category2) {
       const value = e.target.dataset.category2;
-      page.set(1, pageRender);
+      page.set(1);
       setParams("category2", value);
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
 
     // 브레드크럼 선택
     if (e.target.dataset.breadcrumb === "reset") {
-      page.set(1, pageRender);
+      page.set(1);
       deleteParams("category1");
       deleteParams("category2");
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
 
     if (e.target.classList.contains("breadcrumb-btn1")) {
       const category1 = e.target.dataset.breadcrumb;
-      page.set(1, pageRender);
+      page.set(1);
       deleteParams("category2");
       setParams("category1", category1);
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
 
     // 장바구니 담기
@@ -118,43 +111,45 @@ const HomePage = async (render, { showToast }) => {
       const productId = btn.dataset.productId;
       const product = products.get().products.find((product) => product.productId === productId);
       addToCart(product);
-      pageRender();
-
+      await pageRender();
+      // DOM 렌더링이 완전히 완료될 때까지 대기 (CI 환경 안정성)
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       showToast({ message: "장바구니에 추가되었습니다", type: "success" });
     }
 
     if (e.target.id === "retry-btn") {
-      getProductsData();
-      pageRender();
+      await getProductsData();
     }
   });
 
   // 상품목록 가져오기
   const getProductsData = async () => {
+    isLoading.set(true, pageRender);
     const productData = await getProducts({ ...getAllParams(), page: page.get() }).catch((e) => e.response);
     if (!productData) {
-      products.set({ products: [], pagination: {} }, pageRender);
+      products.set({ products: [], pagination: {} });
       isLoading.set(false);
       render(Error());
       return;
     }
 
-    page.get() === 1
-      ? products.set(productData, pageRender)
-      : products.set(
-          { products: [...products.get().products, ...productData.products], pagination: productData.pagination },
-          pageRender,
-        );
-    isLoading.set(false);
-    pageRender();
+    if (page.get() === 1) {
+      products.set(productData);
+    } else {
+      products.set({
+        products: [...products.get().products, ...productData.products],
+        pagination: productData.pagination,
+      });
+    }
+    isLoading.set(false, pageRender);
   };
 
   // 카테고리목록 가져오기
   const getCategoriesData = async () => {
-    isCategoryLoading.set(true, pageRender);
+    isCategoryLoading.set(true);
     const categoryData = await getCategories();
-    categories.set(categoryData, pageRender);
-    isCategoryLoading.set(false, pageRender);
+    categories.set(categoryData);
+    isCategoryLoading.set(false);
   };
 
   // 무한스크롤 설정
@@ -176,7 +171,6 @@ const HomePage = async (render, { showToast }) => {
         // 화면 안에 요소가 들어왔고, 로딩 중이 아닐 때만 실행
         if (entry.isIntersecting && !isLoading.get() && products.get().pagination.hasNext) {
           page.set(page.get() + 1);
-          isLoading.set(true, pageRender);
 
           await getProductsData();
         }
